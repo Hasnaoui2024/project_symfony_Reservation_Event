@@ -3,7 +3,7 @@
 @tailwind components;
 @tailwind utilities;
 
-//* app.css */
+/* app.css */
 .logo {
     height: 50px; /* Vous pouvez ajuster cette valeur */
     background-color: red; /* Teste si Tailwind fonctionne */
