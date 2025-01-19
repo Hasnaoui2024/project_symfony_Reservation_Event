@@ -1,6 +1,6 @@
 import { registerReactControllerComponents } from '@symfony/ux-react';
 import React, { useState } from 'react';
-import ReactDOM from 'react-dom';
+import { createRoot } from 'react-dom/client'; // Utilisez createRoot pour React 18+
 import './bootstrap.js';
 import './styles/app.css';
 
@@ -18,7 +18,7 @@ const Logo = () => {
 
     return (
         <img
-            src="/images/logo.webp" 
+            src="/images/logo.webp"
             alt="Reservation Event"
             className={`logo ${hovered ? 'logo-hover' : ''}`} // Ajoute une classe conditionnelle
             onMouseEnter={handleMouseEnter}
@@ -32,7 +32,8 @@ const Logo = () => {
 document.addEventListener('DOMContentLoaded', () => {
     const logoContainer = document.getElementById('react-logo');
     if (logoContainer) {
-        ReactDOM.render(<Logo />, logoContainer);
+        const root = createRoot(logoContainer); // Utilisez createRoot pour initialiser le rendu
+        root.render(<Logo />);
     }
 });
 

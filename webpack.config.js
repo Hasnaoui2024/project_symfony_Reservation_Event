@@ -9,8 +9,6 @@ Encore
     .setOutputPath('public/build/')
     .setPublicPath('/build')
     .splitEntryChunks()
-
-    // enables the Symfony UX Stimulus bridge (used in assets/bootstrap.js)
     .enableStimulusBridge('./assets/controllers.json')
     .enableSingleRuntimeChunk()
     .cleanupOutputBeforeBuild()
@@ -23,8 +21,7 @@ Encore
     })
     .enablePostCssLoader()
     .enableReactPreset() // Activation de React
-   .addEntry('app', './assets/app.js')
-   .addEntry('styles', './assets/styles/app.css') 
-;
+    .addEntry('app', './assets/app.js')
+    .addStyleEntry('app-styles', './assets/styles/app.css'); // Nom différent ici
 
 module.exports = Encore.getWebpackConfig();
