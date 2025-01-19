@@ -1,0 +1,50 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Réservations pour {{ event.titre }}{% endblock %}
+
+{% block body %}
+    <h1>Réservations pour {{ event.titre }}</h1>
+
+    <!-- Formulaire de recherche par email -->
+    <form method="GET" action="{{ path('admin_events_reservations', {'id': event.id}) }}" class="mb-4">
+        <div class="input-group">
+            <input type="text" name="search" class="form-control" placeholder="Rechercher par email..." value="{{ app.request.query.get('search') }}">
+            <button type="submit" class="btn btn-primary">Rechercher</button>
+        </div>
+    </form>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Email</th>
+                <th>Date de réservation</th>
+                <th>Statut</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for reservation in reservations %}
+                <tr>
+                    <td>{{ reservation.user.email }}</td>
+                    <td>{{ reservation.dateReservation|date('d/m/Y H:i') }}</td>
+                    <td>{{ reservation.statut.value }}</td>
+                    <td>
+                        <form action="{{ path('admin_reservation_update_status', {'id': reservation.id}) }}" method="POST" class="d-inline">
+                            <select name="status" class="form-control form-control-sm">
+                                <option value="{{ constant('App\\Enum\\Statut::PENDING').value }}" {% if reservation.statut == constant('App\\Enum\\Statut::PENDING') %}selected{% endif %}>Payé</option>
+                                <option value="{{ constant('App\\Enum\\Statut::CANCELLED').value }}" {% if reservation.statut == constant('App\\Enum\\Statut::CANCELLED') %}selected{% endif %}>Annulé</option>
+                            </select>
+                            <button type="submit" class="btn btn-sm btn-primary">Mettre à jour</button>
+                        </form>
+                    </td>
+                </tr>
+            {% else %}
+                <tr>
+                    <td colspan="4">Aucune réservation trouvée</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <a href="{{ path('admin_events_index') }}" class="btn btn-secondary">Retour à la liste des événements</a>
+{% endblock %}

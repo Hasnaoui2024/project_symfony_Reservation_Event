@@ -1,0 +1,16 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Détails de l'événement - {{ event.titre }}{% endblock %}
+
+{% block body %}
+    <h1>{{ event.titre }}</h1>
+
+    <div class="event-details">
+        <p><strong>Description :</strong> {{ event.description }}</p>
+        <p><strong>Date :</strong> {{ event.date|date('d/m/Y H:i') }}</p>
+        <p><strong>Lieu :</strong> {{ event.lieu }}</p>
+        <p><strong>Places disponibles :</strong> {{ event.nbrPlace }}</p>
+    </div>
+
+    <a href="{{ path('admin_events_index') }}" class="btn btn-secondary">Retour à la liste</a>
+{% endblock %}

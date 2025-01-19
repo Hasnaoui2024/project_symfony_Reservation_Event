@@ -1,0 +1,39 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Détails de l'événement - {{ event.titre }}{% endblock %}
+
+{% block body %}
+    <h1>{{ event.titre }}</h1>
+
+    <div class="event-details">
+        <p><strong>Description :</strong> {{ event.description }}</p>
+        <p><strong>Date :</strong> {{ event.date|date('d/m/Y H:i') }}</p>
+        <p><strong>Lieu :</strong> {{ event.lieu }}</p> {# Ajout du lieu ici #}
+
+        {% if event.nbrPlace - event.reservations|length > 0 %}
+            <a href="{{ path('reserve_event', {'id': event.id}) }}" class="btn btn-success">Réserver un billet</a>
+        {% else %}
+            <p class="text-danger">Désolé, cet événement est complet.</p>
+        {% endif %}
+
+        {% if app.user %}
+            <h2>Mes réservations</h2>
+            <ul>
+                {% for reservation in event.reservations %}
+                    {% if reservation.user == app.user %}
+                        <li>
+                            Réservation du {{ reservation.dateReservation|date('d/m/Y H:i') }}
+                            <form action="{{ path('cancel_reservation', {'id': reservation.id}) }}" method="POST" onsubmit="return confirm('Êtes-vous sûr de vouloir annuler cette réservation ?');">
+                                <input type="hidden" name="_method" value="POST">
+                                <input type="hidden" name="_token" value="{{ csrf_token('cancel' ~ reservation.id) }}">
+                                <button type="submit" class="btn btn-danger">Annuler la réservation</button>
+                            </form>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+            </ul>
+        {% endif %}
+    </div>
+
+    <a href="{{ path('events_list') }}" class="btn btn-secondary">Retour à la liste</a>
+{% endblock %}

@@ -1,0 +1,64 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Événements disponibles{% endblock %}
+
+{% block body %}
+    {# Afficher les messages flash #}
+    {% for message in app.flashes('success') %}
+        <div class="alert alert-success">
+            {{ message }}
+        </div>
+    {% endfor %}
+
+    {# Barre de recherche #}
+    <form action="{{ path('events_list') }}" method="GET" class="mb-4">
+        <div class="input-group">
+            <input type="text" name="search" class="form-control" placeholder="Rechercher un événement par titre..." value="{{ app.request.query.get('search') }}">
+            <div class="input-group-append">
+                <button type="submit" class="btn btn-primary">Rechercher</button>
+            </div>
+        </div>
+    </form>
+
+    {# Liste des événements #}
+    <h1>Événements disponibles</h1>
+    <ul>
+        {% for event in events %}
+            <li>
+                <h2>{{ event.titre }}</h2>
+                <a href="{{ path('event_show', {'id': event.id}) }}" class="btn btn-primary">Voir les détails</a>
+
+                {# Vérifier si l'utilisateur a déjà réservé cet événement #}
+                {% if app.user and event.isReservedByUser(app.user) %}
+                    <span class="btn btn-secondary" disabled>Déjà réservé</span>
+                {% else %}
+                    <a href="{{ path('reserve_event', {'id': event.id}) }}" class="btn btn-success">Réserver</a>
+                {% endif %}
+            </li>
+        {% else %}
+            <li>Aucun événement trouvé.</li>
+        {% endfor %}
+    </ul>
+
+    {# Script pour afficher la boîte de dialogue #}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Vérifier si l'indicateur de réservation réussie est présent
+            const showReservationSuccess = {{ app.session.get('show_reservation_success') ? 'true' : 'false' }};
+
+            if (showReservationSuccess) {
+                // Afficher une boîte de dialogue
+                alert('Votre réservation a été confirmée avec succès !');
+
+                // Supprimer l'indicateur de la session
+                fetch('{{ path("clear_reservation_success") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+            }
+        });
+    </script>
+{% endblock %}

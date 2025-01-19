@@ -1,0 +1,10 @@
+{# templates/reservation/reservation_confirmation.html.twig #}
+{% extends 'base.html.twig' %}
+
+{% block title %}Confirmation de réservation{% endblock %}
+
+{% block body %}
+    <h1>Réservation confirmée</h1>
+    <p>Merci, votre réservation pour l'événement "{{ reservation.event.title }}" a été enregistrée.</p>
+    <a href="{{ path('events_list') }}">Retour à la liste des événements</a>
+{% endblock %}

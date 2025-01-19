@@ -1,0 +1,35 @@
+security:
+    password_hashers:
+        # Définir le hasher pour l'entité Users
+        App\Entity\Users:
+            algorithm: auto
+            cost: 12
+    # Définir la hiérarchie des rôles
+    role_hierarchy:
+        ROLE_ADMIN: ROLE_USER  # Un admin a aussi les droits d'un utilisateur standard
+
+    # Définir le fournisseur d'utilisateurs (User Provider)
+    providers:
+        app_user_provider:
+            entity:
+                class: App\Entity\Users  # L'entité utilisateur
+                property: email         # Le champ utilisé pour l'authentification (ici, l'email)
+
+    # Configuration des firewalls (sécurité des routes)
+    firewalls:
+        main:
+            pattern: ^/
+            lazy: true 
+            form_login:
+                login_path: app_login
+                check_path: app_login
+                default_target_path: home
+            logout:
+                path: app_logout
+                target: app_login
+
+    access_control:
+        - { path: ^/login, roles: PUBLIC_ACCESS }
+        - { path: ^/register, roles: PUBLIC_ACCESS }
+        - { path: ^/admin, roles: ROLE_ADMIN }
+        - { path: ^/, roles: ROLE_USER }

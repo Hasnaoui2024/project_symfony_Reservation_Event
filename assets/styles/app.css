@@ -1,0 +1,17 @@
+/* app.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+//* app.css */
+.logo {
+    height: 50px; /* Vous pouvez ajuster cette valeur */
+    background-color: red; /* Teste si Tailwind fonctionne */
+    transition: transform 0.3s ease, filter 0.3s ease;
+}
+
+/* Animation au survol */
+.logo-hover {
+    transform: scale(1.2); /* Zoom */
+    filter: brightness(1.2); /* Accentuer la luminosité */
+}

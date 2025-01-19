@@ -1,0 +1,16 @@
+{% block body %}
+<div class="bg-white">
+    <div class="mx-auto max-w-7xl py-16 px-4 sm:py-24 sm:px-6 lg:px-8">
+        <div class="text-center">
+            <p class="mt-1 text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl">
+                Bienvenue sur le site !
+            </p>
+            <p class="mx-auto mt-5 max-w-xl text-xl text-gray-500">
+                Nous sommes ravis de vous voir ici.
+            </p>
+            <div {{ react_component('MyComponent', { 'fullName': username }) }}></div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}

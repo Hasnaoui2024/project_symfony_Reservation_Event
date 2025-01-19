@@ -1,0 +1,54 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Détails de l'événement{% endblock %}
+
+{% block body %}
+    <h1>Détails de l'événement</h1>
+
+    <table class="table">
+        <tbody>
+            <tr>
+                <th>Nom</th>
+                <td>{{ event.titre }}</td>
+            </tr>
+            <tr>
+                <th>Description</th>
+                <td>{{ event.description }}</td>
+            </tr>
+            <tr>
+                <th>Date</th>
+                <td>{{ event.date ? event.date|date('Y-m-d H:i:s') : '' }}</td>
+            </tr>
+            <tr>
+                <th>Prix</th>
+                <td>{{ event.prix }}</td>
+            </tr>
+            <tr>
+                <th>Places disponibles</th>
+                <td>{{ event.nbrPlace }}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    {% if app.user %}
+        {% if event.nbrPlace > 0 %}
+            <form action="{{ path('app_events_reserve', {'id': event.id}) }}" method="post">
+                <input type="hidden" name="_token" value="{{ csrf_token('reserve' ~ event.id) }}">
+                <button type="submit" class="btn btn-primary">Réserver</button>
+            </form>
+        {% else %}
+            <p class="text-danger">Désolé, il n'y a plus de places disponibles pour cet événement.</p>
+        {% endif %}
+
+        {% if app.user in event.reservations|map(r => r.user) %}
+            <form action="{{ path('app_events_cancel', {'id': event.id}) }}" method="post">
+                <input type="hidden" name="_token" value="{{ csrf_token('cancel' ~ event.id) }}">
+                <button type="submit" class="btn btn-danger">Annuler la réservation</button>
+            </form>
+        {% endif %}
+    {% else %}
+        <p>Veuillez <a href="{{ path('app_login') }}">vous connecter</a> pour réserver cet événement.</p>
+    {% endif %}
+
+    <a href="{{ path('app_events_index') }}">Retour à la liste</a>
+{% endblock %}
