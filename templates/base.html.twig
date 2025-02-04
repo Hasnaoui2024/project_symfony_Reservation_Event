@@ -5,64 +5,93 @@
         <title>{% block title %}Bienvenue{% endblock %}</title>
         <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
         
-        <link rel="stylesheet" href="{{ asset('build/assets_styles_app_css.css') }}">
-
-        {# Chemin correct vers le fichier app.css situé dans asset/styles 
-        <link rel="stylesheet" href="{{ asset('styles/app.css') }}">#}
-
         <style>
-            body {
-                font-family: 'Georgia', serif;
-                background-color: #f8f9fa;
+            /* Couleurs principales */
+            :root {
+                --couleur-primaire: #000; /* Noir */
+                --couleur-secondaire: #FFD700; /* Jaune */
+                --couleur-fond: #f5f5f5; /* Blanc cassé */
+                --couleur-texte: #333; /* Gris foncé */
+                --couleur-bouton: #ADD8E6; /* Bleu clair */
             }
 
+            body {
+                font-family: 'Georgia', serif;
+                background-color: var(--couleur-fond);
+                color: var(--couleur-texte);
+            }
+
+            /* Barre de navigation */
             .navbar {
-                background-color: #ffffff;
+                background-color: var(--couleur-primaire);
                 box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             }
 
             .navbar-brand {
                 font-weight: bold;
-                color: #007bff;
+                color: var(--couleur-secondaire);
             }
 
             .navbar-nav .nav-link {
-                color: #333333;
+                color: var(--couleur-secondaire);
                 margin-left: 20px;
             }
 
             .navbar-nav .nav-link:hover {
-                color: #007bff;
+                text-decoration: underline;
             }
 
             .container {
                 padding-top: 20px;
             }
+
+            /* Boutons */
+            .logout-btn {
+                
+                color: white;
+                border: none;
+                padding: 8px 16px;
+                border-radius: 4px;
+                cursor: pointer;
+            }
+
+            
         </style>
         
         {% block stylesheets %}{% endblock %}
     </head>
     <body>
         <!-- Barre de navigation -->
-        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <nav class="navbar navbar-expand-lg">
+            <a class="navbar-brand" href="{{ path('app_login') }}">
+                <img src="{{ asset('images/logo1.webp') }}" alt="Logo de l'application" width="300" height="150">
+            </a>
             <div class="container">
-                <a class="navbar-brand" href="{{ path('app_home') }}">
-                    <div id="react-logo"></div> {# Conteneur pour le logo animé avec React #}
-                </a>
                 <div class="collapse navbar-collapse" id="navbarNav">
                     <ul class="navbar-nav ml-auto">
                         {% if app.user %}
-                            {# Afficher le nom d'utilisateur connecté, extrait avant @ #}
+                            {% if 'ROLE_ADMIN' in app.user.roles %}
+                                <a class="navbar-brand" href="{{ path('app_login') }}">
+                                    Tableau de bord Admin
+                                </a>
+                            {% else %}
+                                <li class="nav-item">
+                                    <span class="nav-link">Salut, <strong>{{ app.user.email|split('@')[0] }}</strong></span>
+                                </li>
+                            {% endif %}
                             <li class="nav-item">
-                                <span class="nav-link">Bonjour, <strong>{{ app.user.email|split('@')[0] }}</strong></span>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="{{ path('app_logout') }}">Déconnexion</a>
+                                <a class="nav-link logout-btn" href="{{ path('app_logout') }}">Déconnexion</a>
                             </li>
                         {% else %}
-                            <li class="nav-item">
-                                <a class="nav-link" href="{{ path('app_login') }}">Connexion</a>
-                            </li>
+                            {% if app.request.get('_route') == 'app_register' %}
+                                <li class="nav-item">
+                                    <a class="nav-link" href="{{ path('app_login') }}">Connexion</a>
+                                </li>
+                            {% else %}
+                                <li class="nav-item">
+                                    <a class="nav-link" href="{{ path('app_register') }}"><h4>Register</h4></a>
+                                </li>
+                            {% endif %}
                         {% endif %}
                     </ul>
                 </div>
@@ -80,19 +109,5 @@
         <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 
         {% block javascripts %}{% endblock %}
-
-        {{ encore_entry_script_tags('app') }}
-
-        <script>
-            document.addEventListener('DOMContentLoaded', () => {
-                const logoContainer = document.getElementById('react-logo');
-                if (logoContainer) {
-                    console.log("Le conteneur React a bien été trouvé.");
-                } else {
-                    console.log("Le conteneur React est introuvable.");
-                }
-            });
-        </script>
-
     </body>
 </html>

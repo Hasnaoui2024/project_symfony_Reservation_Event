@@ -1,0 +1,20 @@
+.event-full {
+    position: relative;
+    background-color: rgba(255, 0, 0, 0.1);
+    text-align: center;
+    color: red;
+    text-decoration: line-through;
+}
+
+.event-overlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-weight: bold;
+    font-size: 18px;
+    color: white;
+    background: red;
+    padding: 5px 10px;
+    border-radius: 5px;
+}

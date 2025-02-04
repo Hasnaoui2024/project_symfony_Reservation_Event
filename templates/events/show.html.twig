@@ -29,7 +29,7 @@
             </tr>
         </tbody>
     </table>
-
+{#
     {% if app.user %}
         {% if event.nbrPlace > 0 %}
             <form action="{{ path('app_events_reserve', {'id': event.id}) }}" method="post">
@@ -38,7 +38,7 @@
             </form>
         {% else %}
             <p class="text-danger">Désolé, il n'y a plus de places disponibles pour cet événement.</p>
-        {% endif %}
+        {% endif %}#}
 
         {% if app.user in event.reservations|map(r => r.user) %}
             <form action="{{ path('app_events_cancel', {'id': event.id}) }}" method="post">

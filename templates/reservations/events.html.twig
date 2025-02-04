@@ -22,43 +22,94 @@
 
     {# Liste des événements #}
     <h1>Événements disponibles</h1>
-    <ul>
-        {% for event in events %}
-            <li>
+
+    <div class="event-list">
+    {% for event in events %}
+        {# Vérifier si l'utilisateur connecté a réservé cet événement #}
+        {% set isReservedByUser = app.user and event.isReservedByUser(app.user) %}
+
+        <div class="event-item {% if not isReservedByUser and event.nbrPlace <= 0 %}event-full{% endif %} {% if event.canceled %}event-canceled{% endif %}">
+            <div class="event-content"> {# Ajout d'un wrapper pour le contenu #}
                 <h2>{{ event.titre }}</h2>
-                <a href="{{ path('event_show', {'id': event.id}) }}" class="btn btn-primary">Voir les détails</a>
-
-                {# Vérifier si l'utilisateur a déjà réservé cet événement #}
-                {% if app.user and event.isReservedByUser(app.user) %}
-                    <span class="btn btn-secondary" disabled>Déjà réservé</span>
+                {% if event.canceled %}
+                    <div class="canceled-overlay">
+                        <img src="{{ asset('images/canceled.png') }}" alt="Annulé">
+                    </div>
+                {% elseif not isReservedByUser and event.nbrPlace <= 0 %}
+                    <div class="sold-out-overlay">
+                        <img src="{{ asset('images/sold_out.png') }}" alt="Sold Out">
+                    </div>
                 {% else %}
-                    <a href="{{ path('reserve_event', {'id': event.id}) }}" class="btn btn-success">Réserver</a>
+                    <a href="{{ path('event_show', {'id': event.id}) }}" class="btn btn-primary">Voir les détails</a>
+                    {% if isReservedByUser %}
+                        <span class="btn btn-secondary" disabled>Déjà réservé</span>
+                    {% endif %}
                 {% endif %}
-            </li>
-        {% else %}
-            <li>Aucun événement trouvé.</li>
-        {% endfor %}
-    </ul>
+            </div> {# Fin du wrapper pour le contenu #}
+            <div class="event-image"> {# Ajout d'un container pour l'image #}
+                <img src="{{ asset('uploads/events/' ~ event.image) }}" alt="Image de l'événement"> 
+            </div> {# Fin du container pour l'image #}
+        </div>
+    {% else %}
+        <p>Aucun événement trouvé.</p>
+    {% endfor %}
+</div>
 
-    {# Script pour afficher la boîte de dialogue #}
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Vérifier si l'indicateur de réservation réussie est présent
-            const showReservationSuccess = {{ app.session.get('show_reservation_success') ? 'true' : 'false' }};
 
-            if (showReservationSuccess) {
-                // Afficher une boîte de dialogue
-                alert('Votre réservation a été confirmée avec succès !');
+    <style>
+        .event-list {
+            display: block; /* Affichage en mode bloc pour empiler les éléments */
+        }
 
-                // Supprimer l'indicateur de la session
-                fetch('{{ path("clear_reservation_success") }}', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest'
-                    }
-                });
-            }
-        });
-    </script>
+        .event-item {
+            width: 100%;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            display: flex; /* Utilisation de flexbox pour aligner le contenu et l'image */
+            align-items: center; /* Alignement vertical au centre */
+            position: relative; /* Pour positionner l'overlay */
+        }
+
+        .event-content {
+            flex: 1; /* Le contenu occupe l'espace disponible */
+        }
+
+        .event-image {
+            width: 8cm; /* Largeur de 8cm */
+            height: 4cm; /* Hauteur de 4cm */
+            margin-left: 20px; /* Espacement entre le contenu et l'image */
+        }
+
+        .event-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover; /* L'image remplit le conteneur en conservant les proportions */
+        }
+
+        .event-full {
+            opacity: 1.0; /* Légère transparence pour les événements complets */
+        }
+
+        .sold-out-overlay, .canceled-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: rgba(255, 255, 255, 0.54); /* Arrière-plan semi-transparent */
+        }
+
+        .sold-out-overlay img, .canceled-overlay img {
+            position: relative;
+            left: 2cm;
+            width: 250px;
+            height: auto;
+        }
+    </style>
+
 {% endblock %}

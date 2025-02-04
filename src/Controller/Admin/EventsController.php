@@ -39,13 +39,22 @@ public function index(Request $request, EventsRepository $eventsRepository): Res
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            // Gestion de l'upload de l'image
+            $imageFile = $form->get('image')->getData();
+            if ($imageFile) {
+                $newFilename = uniqid().'.'.$imageFile->guessExtension();
+                $imageFile->move($this->getParameter('event_images_directory'), $newFilename);
+                $event->setImage($newFilename);
+            }
+        
             $entityManager->persist($event);
             $entityManager->flush();
-
+        
             $this->addFlash('success', 'L\'événement a été créé avec succès.');
-
-            return $this->redirectToRoute('admin_events_index', [], Response::HTTP_SEE_OTHER);
+        
+            return $this->redirectToRoute('admin_events_index');
         }
+        
 
         return $this->render('admin/events/new.html.twig', [
             'event' => $event,
@@ -62,24 +71,45 @@ public function index(Request $request, EventsRepository $eventsRepository): Res
     }
 
     #[Route('/{id}/edit', name: 'admin_events_edit', methods: ['GET', 'POST'])]
-    public function edit(Request $request, Events $event, EntityManagerInterface $entityManager): Response
-    {
-        $form = $this->createForm(EventsType::class, $event);
-        $form->handleRequest($request);
+public function edit(Request $request, Events $event, EntityManagerInterface $entityManager): Response
+{
+    $oldImage = $event->getImage(); // Sauvegarde de l'ancienne image
 
-        if ($form->isSubmitted() && $form->isValid()) {
-            $entityManager->flush();
+    $form = $this->createForm(EventsType::class, $event);
+    $form->handleRequest($request);
 
-            $this->addFlash('success', 'L\'événement a été modifié avec succès.');
+    if ($form->isSubmitted() && $form->isValid()) {
+        $imageFile = $form->get('image')->getData();
 
-            return $this->redirectToRoute('admin_events_index', [], Response::HTTP_SEE_OTHER);
+        if ($imageFile) {
+            $newFilename = uniqid().'.'.$imageFile->guessExtension();
+            $imageFile->move($this->getParameter('event_images_directory'), $newFilename);
+            $event->setImage($newFilename);
+        } else {
+            // Conserver l'image existante si aucune nouvelle image n'est téléchargée
+            $event->setImage($oldImage);
         }
-
-        return $this->render('admin/events/edit.html.twig', [
-            'event' => $event,
-            'form' => $form,
-        ]);
+// Vérifier si l'événement est annulé
+if ($event->getCanceled()) { 
+    // Supprimer toutes les réservations associées
+    $reservations = $entityManager->getRepository(Reservations::class)->findBy(['event' => $event]);
+    foreach ($reservations as $reservation) {
+        $entityManager->remove($reservation);
     }
+}
+        $entityManager->flush();
+
+        $this->addFlash('success', 'L\'événement a été modifié avec succès.');
+
+        return $this->redirectToRoute('admin_events_index', [], Response::HTTP_SEE_OTHER);
+    }
+
+    return $this->render('admin/events/edit.html.twig', [
+        'event' => $event,
+        'form' => $form,
+    ]);
+}
+
 
     #[Route('/{id}/delete', name: 'admin_events_delete', methods: ['POST'])]
 public function delete(Request $request, Events $event, EntityManagerInterface $entityManager): Response

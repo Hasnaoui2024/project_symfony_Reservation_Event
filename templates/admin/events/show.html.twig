@@ -9,7 +9,14 @@
         <p><strong>Description :</strong> {{ event.description }}</p>
         <p><strong>Date :</strong> {{ event.date|date('d/m/Y H:i') }}</p>
         <p><strong>Lieu :</strong> {{ event.lieu }}</p>
+        <p><strong>Prix :</strong> {{ event.prix }} {{ event.devise ?: 'Devise non spécifiée' }}</p>
         <p><strong>Places disponibles :</strong> {{ event.nbrPlace }}</p>
+    {% if event.image %}
+    <div class="form-group">
+        <label>Image actuelle :</label><br>
+        <img src="{{ asset('uploads/events/' ~ event.image) }}" alt="Image de l'événement" style="max-width: 200px;">
+    </div>
+{% endif %}
     </div>
 
     <a href="{{ path('admin_events_index') }}" class="btn btn-secondary">Retour à la liste</a>

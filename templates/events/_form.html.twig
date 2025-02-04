@@ -2,26 +2,54 @@
     <div class="form-group">
         {{ form_label(form.titre) }}
         {{ form_widget(form.titre, {'attr': {'class': 'form-control'}}) }}
+        {{ form_errors(form.titre) }}
     </div>
     <div class="form-group">
         {{ form_label(form.description) }}
         {{ form_widget(form.description, {'attr': {'class': 'form-control'}}) }}
+        {{ form_errors(form.description) }}
     </div>
     <div class="form-group">
         {{ form_label(form.date) }}
         {{ form_widget(form.date, {'attr': {'class': 'form-control'}}) }}
+        {{ form_errors(form.date) }}
     </div>
     <div class="form-group">
         {{ form_label(form.lieu) }}
         {{ form_widget(form.lieu, {'attr': {'class': 'form-control'}}) }}
+        {{ form_errors(form.lieu) }}
     </div>
     <div class="form-group">
-        {{ form_label(form.prix) }}
-        {{ form_widget(form.prix, {'attr': {'class': 'form-control'}}) }}
+    {{ form_label(form.prix) }}
+    <div class="d-flex">
+        {{ form_widget(form.prix, {'attr': {'class': 'form-control', 'style': 'width: 80%;'}}) }}
+        {{ form_widget(form.devise, {'attr': {'class': 'form-control', 'style': 'width: 20%;'}}) }}
     </div>
+    {{ form_errors(form.prix) }}
+    {{ form_errors(form.devise) }}
+</div>
+
     <div class="form-group">
         {{ form_label(form.nbrPlace) }}
         {{ form_widget(form.nbrPlace, {'attr': {'class': 'form-control'}}) }}
+        {{ form_errors(form.nbrPlace) }}
     </div>
+    <div class="form-group">
+    {{ form_label(form.image) }}
+    {{ form_widget(form.image, {'attr': {'class': 'form-control'}}) }}
+    {{ form_errors(form.image) }}
+</div>
+{% if event.image %}
+    <div class="form-group">
+        <label>Image actuelle :</label><br>
+        <img src="{{ asset('uploads/events/' ~ event.image) }}" alt="Image de l'événement" style="max-width: 200px;">
+    </div>
+{% endif %}
+<div class="form-group">
+    {{ form_label(form.canceled) }}
+    {{ form_widget(form.canceled) }}
+    {{ form_errors(form.canceled) }}
+</div>
+
     <button class="btn btn-primary">{{ button_label|default('Save') }}</button>
 {{ form_end(form) }}

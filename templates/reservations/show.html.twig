@@ -3,24 +3,70 @@
 {% block title %}Détails de l'événement - {{ event.titre }}{% endblock %}
 
 {% block body %}
+    {# Afficher les messages flash #}
+    {% for message in app.flashes('success') %}
+        <div class="alert alert-success">
+            {{ message }}
+        </div>
+    {% endfor %}
+    {% for message in app.flashes('error') %}
+        <div class="alert alert-danger">
+            {{ message }}
+        </div>
+    {% endfor %}
+
+    {# Titre de l'événement #}
     <h1>{{ event.titre }}</h1>
 
-    <div class="event-details">
-        <p><strong>Description :</strong> {{ event.description }}</p>
-        <p><strong>Date :</strong> {{ event.date|date('d/m/Y H:i') }}</p>
-        <p><strong>Lieu :</strong> {{ event.lieu }}</p> {# Ajout du lieu ici #}
+    {# Statut annulé #}
+    {% if event.canceled %}
+        <span class="badge bg-danger">Annulé</span>
+    {% endif %}
 
-        {% if event.nbrPlace - event.reservations|length > 0 %}
-            <a href="{{ path('reserve_event', {'id': event.id}) }}" class="btn btn-success">Réserver un billet</a>
+    {# Image de l'événement #}
+    {% if event.image %}
+        <div>
+            <img src="{{ asset('uploads/events/' ~ event.image) }}" alt="Image de l’événement" class="img-fluid" style="max-width: 400px; margin-bottom: 15px;">
+        </div>
+    {% endif %}
+
+    {# Détails de l'événement #}
+    <div class="event-details">
+        <p><strong>Description :</strong><br> {{ event.description }}</p>
+        <p><strong>Date :</strong> {{ event.date ? event.date|date('d/m/Y H:i') : 'Plus de détails à venir' }}</p>
+        <p><strong>Lieu :</strong> {{ event.lieu ?: 'Plus de détails à venir' }}</p>
+        <p><strong>Prix :</strong> {{ event.prix }} {{ event.devise ?: 'Devise non spécifiée' }}</p>
+
+        {# Calcul des réservations et places disponibles #}
+        {% set userReservationsCount = event.reservations|filter(r => r.user == app.user)|length %}
+        {% set maxReservable = 3 - userReservationsCount %}
+        {% set availableSeats = event.nbrPlace %}
+
+        {# Formulaire de réservation (si l'événement n'est pas annulé) #}
+        {% if not event.canceled %}
+            {% if maxReservable > 0 and availableSeats > 0 %}
+                <form action="{{ path('reserve_event', {'id': event.id}) }}" method="POST" style="display: flex; gap: 10px; align-items: center; margin-top: 10px;">
+                    <label for="ticket_count"><strong>Nombre de billets :</strong></label>
+                    <input type="number" id="ticket_count" name="ticket_count" min="1" max="{{ maxReservable }}" value="1" required>
+                    <button type="submit" class="btn btn-success">Réserver</button>
+                </form>
+            {% elseif availableSeats <= 0 %}
+            {{availableSeats}}
+                <p class="text-danger">Désolé, cet événement est complet.</p>
+            {% else %}
+                <p class="text-warning">Vous avez atteint la limite de 3 réservations.</p>
+            {% endif %}
         {% else %}
-            <p class="text-danger">Désolé, cet événement est complet.</p>
+            <p class="text-danger"><strong>Les réservations sont fermées pour cet événement annulé.</strong></p>
         {% endif %}
 
+        {# Liste des réservations de l'utilisateur connecté #}
         {% if app.user %}
             <h2>Mes réservations</h2>
             <ul>
-                {% for reservation in event.reservations %}
-                    {% if reservation.user == app.user %}
+                {% set userReservations = event.reservations|filter(r => r.user == app.user) %}
+                {% if userReservations|length > 0 %}
+                    {% for reservation in userReservations %}
                         <li>
                             Réservation du {{ reservation.dateReservation|date('d/m/Y H:i') }}
                             <form action="{{ path('cancel_reservation', {'id': reservation.id}) }}" method="POST" onsubmit="return confirm('Êtes-vous sûr de vouloir annuler cette réservation ?');">
@@ -29,11 +75,14 @@
                                 <button type="submit" class="btn btn-danger">Annuler la réservation</button>
                             </form>
                         </li>
-                    {% endif %}
-                {% endfor %}
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted">Vous n'avez encore aucune réservation pour cet événement.</p>
+                {% endif %}
             </ul>
         {% endif %}
     </div>
 
+    {# Bouton de retour à la liste des événements #}
     <a href="{{ path('events_list') }}" class="btn btn-secondary">Retour à la liste</a>
 {% endblock %}

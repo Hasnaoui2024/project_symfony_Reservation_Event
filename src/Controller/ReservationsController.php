@@ -29,49 +29,6 @@ public function listEvents(Request $request, EventsRepository $eventRepository):
     ]);
 }
 
-    
-
-    #[Route('/event/{eventId}/book', name: 'reservations_new')]
-    public function new(Request $request, EntityManagerInterface $entityManager, int $eventId): Response
-    {
-        // Récupérer l'événement
-        $event = $entityManager->getRepository(Events::class)->find($eventId);
-        if (!$event) {
-            throw $this->createNotFoundException('Événement non trouvé.');
-        }
-
-        // Vérifier la disponibilité des places
-        $availableSeats = $event->getNbrPlace() - $event->getReservations()->count();
-        if ($availableSeats <= 0) {
-            $this->addFlash('error', 'Désolé, cet événement est complet.');
-            return $this->redirectToRoute('event_show', ['id' => $eventId]);
-        }
-
-        // Créer une nouvelle réservation
-        $reservation = new Reservations();
-        $reservation->setEvent($event);
-
-        // Créer le formulaire
-        $form = $this->createForm(ReservationsType::class, $reservation, [
-            'max_attendees' => $availableSeats, // Passer le nombre de places disponibles
-        ]);
-        $form->handleRequest($request);
-
-        if ($form->isSubmitted() && $form->isValid()) {
-            // Enregistrer la réservation
-            $entityManager->persist($reservation);
-            $entityManager->flush();
-
-            $this->addFlash('success', 'Votre réservation a été confirmée !');
-            return $this->redirectToRoute('event_show', ['id' => $eventId]);
-        }
-
-        return $this->render('reservations/new.html.twig', [
-            'form' => $form->createView(),
-            'event' => $event,
-        ]);
-    }
-
     #[Route('/event/{id}', name: 'event_show', methods: ['GET'])]
 public function showEvent(Events $event): Response
 {
@@ -88,43 +45,80 @@ public function cancelReservation(Reservations $reservation, EntityManagerInterf
         throw $this->createAccessDeniedException('Vous ne pouvez pas annuler cette réservation.');
     }
 
+    // Récupérer l'événement lié à la réservation
+    $event = $reservation->getEvent();
+
+    // Incrémenter le nombre de places disponibles
+    $event->setNbrPlace($event->getNbrPlace() + 1);
+
     // Supprimer la réservation
     $entityManager->remove($reservation);
+    $entityManager->persist($event);
     $entityManager->flush();
 
     $this->addFlash('success', 'Votre réservation a été annulée.');
-    return $this->redirectToRoute('event_show', ['id' => $reservation->getEvent()->getId()]);
+    return $this->redirectToRoute('event_show', ['id' => $event->getId()]);
 }
 
-#[Route('/reserve/{id}', name: 'reserve_event', methods: ['GET', 'POST'])]
-public function reserveEvent(Request $request, Events $event, EntityManagerInterface $entityManager, ReservationsRepository $reservationRepository): Response
-{
-    // Vérifier si l'utilisateur est connecté
-    $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
+    #[Route('/event/{id}/reserve', name: 'reserve_event', methods: ['POST'])]
+    public function reserveEvent(Request $request, Events $event, EntityManagerInterface $entityManager, ReservationsRepository $reservationRepository): Response
+    {
+        $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
 
-    // Vérifier la disponibilité des places
-    $reservationsCount = $reservationRepository->count(['event' => $event]);
-    if ($reservationsCount >= $event->getNbrPlace()) {
-        $this->addFlash('error', 'Désolé, cet événement est complet.');
-        return $this->redirectToRoute('events_list');
+        // Nombre de places restantes (déjà mis à jour après chaque réservation)
+        $availableSeats = $event->getNbrPlace();
+
+        // Vérifier combien de réservations l'utilisateur a déjà faites
+        $userReservationsCount = $reservationRepository->count([
+            'user' => $this->getUser(),
+            'event' => $event
+        ]);
+
+        // Récupérer le nombre de billets demandés depuis le formulaire
+        $requestedTickets = (int) $request->request->get('ticket_count', 1);
+
+        // Déterminer la limite de réservation (max 3 ou le nombre de places disponibles)
+        $maxReservable = ($event->getNbrPlace() > 3) ? 3 : $event->getNbrPlace();
+
+        // Vérifier que l'utilisateur ne dépasse pas la limite autorisée
+        if ($requestedTickets > $maxReservable) {
+            $this->addFlash('error', "Vous ne pouvez pas réserver plus de $maxReservable billets au total pour cet événement.");
+            return $this->redirectToRoute('event_show', ['id' => $event->getId()]);
+        }
+
+        // Vérifier si le nombre de billets demandés est disponible
+        if ($requestedTickets > $availableSeats) {
+            $this->addFlash('error', 'Il n\'y a pas assez de places disponibles.');
+            return $this->redirectToRoute('event_show', ['id' => $event->getId()]);
+        }
+
+        // Créer plusieurs réservations en fonction du nombre de billets demandés
+        for ($i = 0; $i < $requestedTickets; $i++) {
+            $reservation = new Reservations();
+            $reservation->setEvent($event);
+            $reservation->setUser($this->getUser());
+            $reservation->setDateReservation(new \DateTime());
+
+            $entityManager->persist($reservation);
+        }
+
+        // Mettre à jour le nombre de places disponibles
+        $event->setNbrPlace($event->getNbrPlace() - $requestedTickets);
+
+        // Sauvegarder en base de données
+        $entityManager->persist($event);
+        $entityManager->flush();
+
+        $this->addFlash('success', 'Votre réservation a été confirmée !');
+
+        return $this->redirectToRoute('event_show', ['id' => $event->getId()]);
     }
 
-    // Créer une nouvelle réservation
-    $reservation = new Reservations();
-    $reservation->setEvent($event);
-    $reservation->setUser($this->getUser()); // Associer l'utilisateur connecté
-    $reservation->setDateReservation(new \DateTime());
 
-    // Enregistrer la réservation
-    $entityManager->persist($reservation);
-    $entityManager->flush();
 
-    // Ajouter un message flash et un indicateur pour la boîte de dialogue
-    $this->addFlash('success', 'Votre réservation a été confirmée !');
-    $request->getSession()->set('show_reservation_success', true);
 
-    return $this->redirectToRoute('events_list');
-}
+
+
 
 #[Route('/clear-reservation-success', name: 'clear_reservation_success', methods: ['POST'])]
 public function clearReservationSuccess(Request $request): Response

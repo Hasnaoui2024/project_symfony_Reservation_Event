@@ -7,6 +7,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: EventsRepository::class)]
 class Events
@@ -22,27 +23,68 @@ class Events
     #[ORM\Column(type: Types::TEXT)]
     private ?string $description = null;
 
-    #[ORM\Column(type: Types::DATETIME_MUTABLE)]
+    #[ORM\Column(type: "datetime")]
+    #[Assert\GreaterThan("today", message: "La date doit être supérieure à aujourd'hui.")]
     private ?\DateTimeInterface $date = null;
 
-    #[ORM\Column(nullable: true)]
+    #[ORM\Column()]
     private ?float $prix = null;
+    
+    #[ORM\Column(type: 'string', length: 10, nullable: true)]
+    private ?string $devise = null;
+    
+    public function getDevise(): ?string {
+        return $this->devise;
+    }
+    
+    public function setDevise(?string $devise): self {
+        $this->devise = $devise;
+        return $this;
+    }
+    
 
     #[ORM\Column]
     private ?int $nbr_place = null;
 
-    #[ORM\Column(length: 255, nullable: true)]
+    #[ORM\Column(length: 255)]
     private ?string $lieu = null;
+
+    #[ORM\Column(length: 255)]
+    private ?string $image = null;
+
+    #[ORM\Column(type: "boolean")]
+    private bool $canceled = false;
 
     public function getLieu(): ?string
     {
-        return $this->lieu;
+        return empty($this->lieu) ? "Plus de détails à venir" : $this->lieu;
     }
 
     public function setLieu(?string $lieu): static
     {
         $this->lieu = $lieu;
 
+        return $this;
+    }
+    public function getImage(): ?string
+    {
+        return $this->image;
+    }
+
+    public function setImage(?string $image): static
+    {
+        $this->image = $image;
+        return $this;
+    }
+
+    public function getCanceled(): bool
+    {
+        return $this->canceled;
+    }
+
+    public function setCanceled(bool $isCanceled): self
+    {
+        $this->canceled = $isCanceled;
         return $this;
     }
 
@@ -164,6 +206,10 @@ class Events
         return false;
     }
 
-    // ...
+    public function isFull(): bool
+{
+    return $this->getNbrPlace() <= 0;
+}
+
 }
 
